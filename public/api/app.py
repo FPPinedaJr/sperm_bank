@@ -283,5 +283,48 @@ def delete_individual(individual_id):
 
 
 
+# RELATIONSHIPS
+@app.route("/api/relationships", methods=["GET"])
+@jwt_required()
+def get_relationships():
+    relationships = fetch_data("SELECT * FROM relationships")
+    return jsonify(relationships), 200
+
+
+@app.route("/api/relationships", methods=["POST"])
+@role_required("admin")
+def add_relationship():
+    data = request.json
+    execute_query(
+        """
+        INSERT INTO relationships (type_id, individual_1_id, individual_2_id, date_start, date_end) VALUES (%s, %s, %s, %s, %s)
+        """,
+        (data["type_id"], data["individual_1_id"], data["individual_2_id"], data["date_start"], data["date_end"]),
+    )
+    return jsonify({"message": "Relationship added successfully."}), 201
+
+
+@app.route("/api/relationships/<int:relationship_id>", methods=["PUT"])
+@role_required("admin")
+def update_relationship(relationship_id):
+    data = request.json
+    execute_query(
+        """
+        UPDATE relationships SET 
+        type_id = %s, individual_1_id = %s, individual_2_id = %s, date_start = %s, date_end = %s WHERE idrelationships = %s
+        """,
+        (data["type_id"], data["individual_1_id"], data["individual_2_id"], data["date_start"], data["date_end"], relationship_id),
+    )
+    return jsonify({"message": "Relationship updated successfully."}), 200
+
+
+@app.route("/api/relationships/<int:relationship_id>", methods=["DELETE"])
+@role_required("admin")
+def delete_relationship(relationship_id):
+    execute_query("DELETE FROM relationships WHERE idrelationships = %s", (relationship_id,))
+    return jsonify({"message": "Relationship deleted successfully."}), 200
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
