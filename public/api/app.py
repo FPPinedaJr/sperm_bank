@@ -236,6 +236,50 @@ def delete_donation(donation_id):
 
 
 
+# INDIVIDUALS
+@app.route("/api/individuals", methods=["GET"])
+@jwt_required()
+def get_individuals():
+    individuals = fetch_data("SELECT * FROM individuals")
+    return jsonify(individuals), 200
+
+
+@app.route("/api/individuals", methods=["POST"])
+@role_required("admin")
+def add_individual():
+    data = request.json
+    execute_query(
+        """
+        INSERT INTO individuals (type_id, birthdate, is_male, fname, mname, lname, address, contact) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (data["type_id"], data["birthdate"], data["is_male"], data["fname"], 
+         data["mname"], data["lname"], data["address"], data["contact"]),
+    )
+    return jsonify({"message": "Individual added successfully."}), 201
+
+
+@app.route("/api/individuals/<int:individual_id>", methods=["PUT"])
+@role_required("admin")
+def update_individual(individual_id):
+    data = request.json
+    execute_query(
+        """
+        UPDATE individuals SET 
+        type_id = %s, birthdate = %s, is_male = %s, fname = %s,
+        mname = %s, lname = %s, address = %s, contact = %s WHERE idindividuals = %s
+        """,
+        (data["type_id"], data["birthdate"], data["is_male"], data["fname"], 
+        data["mname"], data["lname"], data["address"], data["contact"], individual_id),
+    )
+    return jsonify({"message": "Individual updated successfully."}), 200
+
+
+@app.route("/api/individuals/<int:individual_id>", methods=["DELETE"])
+@role_required("admin")
+def delete_individual(individual_id):
+    execute_query("DELETE FROM individuals WHERE idindividuals = %s", (individual_id,))
+    return jsonify({"message": "Individual deleted successfully."}), 200
 
 
 
