@@ -108,6 +108,9 @@ def role_required(required_role):
 ##   E N D   P O I N T S  ##
 ############################
 
+
+
+# ROLE_TYPES
 @app.route("/api/role_types", methods=["GET"])
 @jwt_required()
 def get_role_types():
@@ -146,6 +149,54 @@ def update_role_type(role_type_id):
 def delete_role_type(role_type_id):
     execute_query("DELETE FROM role_types WHERE idrole_types = %s", (role_type_id,))
     return jsonify({"message": "Role_type deleted successfully."}), 200
+
+
+
+# RELATIONSHIP_TYPES
+@app.route("/api/relationship_types", methods=["GET"])
+@jwt_required()
+def get_relationship_types():
+    relationship_types = fetch_data("SELECT * FROM relationship_types")
+    return jsonify(relationship_types), 200
+
+
+@app.route("/api/relationship_types", methods=["POST"])
+@role_required("admin")
+def add_relationship_type():
+    data = request.json
+    execute_query(
+        """
+        INSERT INTO relationship_types (description) VALUES (%s)
+        """,
+        (data["description"],),
+    )
+    return jsonify({"message": "Relationship_type added successfully."}), 201
+
+
+@app.route("/api/relationship_types/<int:relationship_type_id>", methods=["PUT"])
+@role_required("admin")
+def update_relationship_type(relationship_type_id):
+    data = request.json
+    execute_query(
+        """
+        UPDATE relationship_types SET description = %s WHERE idrelationship_types = %s
+    """,
+        (data["description"], relationship_type_id),
+    )
+    return jsonify({"message": "Relationship_type updated successfully."}), 200
+
+
+@app.route("/api/relationship_types/<int:relationship_type_id>", methods=["DELETE"])
+@role_required("admin")
+def delete_relationship_type(relationship_type_id):
+    execute_query("DELETE FROM relationship_types WHERE idrelationship_types = %s", (relationship_type_id,))
+    return jsonify({"message": "Relationship_type deleted successfully."}), 200
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
