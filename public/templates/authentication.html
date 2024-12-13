@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-image: url('https://media.istockphoto.com/id/1443275933/vector/cute-happy-funny-sperm-cell-and-ovum-vector-flat-line-cartoon-illustration-fertilization.jpg?s=612x612&w=0&k=20&c=Es5hCLLV_joO9NiuuSFl1x5XKFhSpGv3qMUfXei-vLQ=');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md border border-2 shadow">
+        <div id="signup-form" class="bg-white shadow-md rounded px-8 py-8  hidden">
+            <h2 class="text-2xl font-bold mb-4 text-pink-700">Sign Up</h2>
+            <form>
+                <div class="mb-4">
+                    <label class="block text-pink-700 text-sm font-bold mb-2" for="signup-username">Username</label>
+                    <input id="signup-username" type="text" placeholder="Enter your username"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-pink-700 text-sm font-bold mb-2" for="signup-password">Password</label>
+                    <input id="signup-password" type="password" placeholder="Enter your password"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-pink-700 text-sm font-bold mb-2" for="signup-role">Role</label>
+                    <select id="signup-role"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button id="signup-btn" type="button"
+                    class="bg-blue-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Sign
+                    Up</button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600">Already have an account? <a href="#" id="switch-to-signin"
+                    class="text-rose-600">Sign In</a></p>
+        </div>
+
+        <div id="signin-form" class="bg-white shadow-md rounded px-8 py-8 ">
+            <h2 class="text-2xl font-bold mb-4 text-pink-700">Sign In</h2>
+            <form>
+                <div class="mb-4">
+                    <label class="block text-pink-700 text-sm font-bold mb-2" for="signin-username">Username</label>
+                    <input id="signin-username" type="text" placeholder="Enter your username"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-pink-700 text-sm font-bold mb-2" for="signin-password">Password</label>
+                    <input id="signin-password" type="password" placeholder="Enter your password"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button id="signin-btn" type="button"
+                    class="bg-blue-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Sign
+                    In</button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600">Don't have an account? <a href="#" id="switch-to-signup"
+                    class="text-rose-600">Sign Up</a></p>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const token = localStorage.getItem('token');
+
+            if (token) {
+                window.location.href = '/individuals';
+            }
+
+
+            $('#switch-to-signin').click(function (e) {
+                e.preventDefault();
+                $('#signup-form').hide();
+                $('#signin-form').show();
+            });
+
+            $('#switch-to-signup').click(function (e) {
+                e.preventDefault();
+                $('#signin-form').hide();
+                $('#signup-form').show();
+            });
+
+            $('#signup-btn').click(function () {
+                const username = $('#signup-username').val();
+                const password = $('#signup-password').val();
+                const role = $('#signup-role').val();
+
+                if (!username || !password || !role) {
+                    alert('All fields are required!');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/auth/register',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username, password, role }),
+                    success: function (response) {
+                        console.log(response.message);
+                        $('#switch-to-signin').click();
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseJSON.message || 'Sign Up failed.');
+                    }
+                });
+            });
+
+            $('#signin-btn').click(function () {
+                const username = $('#signin-username').val();
+                const password = $('#signin-password').val();
+
+                if (!username || !password) {
+                    alert('All fields are required!');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/auth/login',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ username, password }),
+                    success: function (response) {
+                        localStorage.setItem('token', response.token);
+                        window.location.href = '/individuals';
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseJSON.message || 'Sign In failed.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

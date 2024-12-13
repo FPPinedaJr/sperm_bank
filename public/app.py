@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request, make_response, render_template
 from flask_mysqldb import MySQL
 from flask_jwt_extended import (
     JWTManager,
@@ -8,6 +8,7 @@ from flask_jwt_extended import (
 )
 from functools import wraps
 import datetime
+import MySQLdb.cursors
 
 app = Flask(__name__)
 
@@ -28,10 +29,19 @@ jwt = JWTManager(app)
 
 
 
+@app.route("/")
+def show_sign_in():
+    return render_template("authentication.html")
+
+@app.route("/individuals")
+def show_individuals():
+    return render_template("individuals.html")
+
+
 
 # Helper function
 def fetch_data(query, args=()):
-    cur = mysql.connection.cursor()
+    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cur.execute(query, args)
     data = cur.fetchall()
     cur.close()
@@ -43,8 +53,6 @@ def execute_query(query, args=()):
     cur.execute(query, args)
     mysql.connection.commit()
     cur.close()
-
-
 
 
 # Authentication
@@ -80,8 +88,8 @@ def login():
     )
     if user:
         access_token = create_access_token(
-            identity={"username": user[0][1], "role": user[0][3]},
-            expires_delta=datetime.timedelta(hours=1),
+            identity={"username": user[0]["username"], "role": user[0]["role"]},
+            expires_delta=datetime.timedelta(hours=5),
         )
         return jsonify({"token": access_token}), 200
     return jsonify({"message": "Invalid credentials."}), 401
@@ -115,6 +123,13 @@ def role_required(required_role):
 @jwt_required()
 def get_role_types():
     role_types = fetch_data("SELECT * FROM role_types")
+    return jsonify(role_types), 200
+
+
+@app.route("/api/role_types/<int:role_type_id>", methods=["GET"])
+@jwt_required()
+def search_role_types(role_type_id):
+    role_types = fetch_data("SELECT * FROM role_types WHERE idrole_types= %s", (role_type_id,))
     return jsonify(role_types), 200
 
 
@@ -160,6 +175,13 @@ def get_relationship_types():
     return jsonify(relationship_types), 200
 
 
+@app.route("/api/relationship_types/<int:relationship_id>", methods=["GET"])
+@jwt_required()
+def search_relationship_types(relationship_id):
+    relationship_types = fetch_data("SELECT * FROM relationship_types WHERE idrelationship_types= %s", (relationship_id,))
+    return jsonify(relationship_types), 200
+
+
 @app.route("/api/relationship_types", methods=["POST"])
 @role_required("admin")
 def add_relationship_type():
@@ -199,6 +221,13 @@ def delete_relationship_type(relationship_type_id):
 @jwt_required()
 def get_donations():
     donations = fetch_data("SELECT * FROM donations")
+    return jsonify(donations), 200
+
+
+@app.route("/api/donations/<int:donation_id>", methods=["GET"])
+@jwt_required()
+def search_donations(donation_id):
+    donations = fetch_data("SELECT * FROM donations WHERE iddonations= %s", (donation_id,))
     return jsonify(donations), 200
 
 
@@ -244,10 +273,18 @@ def get_individuals():
     return jsonify(individuals), 200
 
 
+@app.route("/api/individuals/<int:individual_id>", methods=["GET"])
+@jwt_required()
+def search_individuals(individual_id):
+    individuals = fetch_data("SELECT * FROM individuals WHERE idindividuals= %s", (individual_id,))
+    return jsonify(individuals), 200
+
+
 @app.route("/api/individuals", methods=["POST"])
 @role_required("admin")
 def add_individual():
     data = request.json
+    print(data)
     execute_query(
         """
         INSERT INTO individuals (type_id, birthdate, is_male, fname, mname, lname, address, contact) 
@@ -290,6 +327,11 @@ def get_relationships():
     relationships = fetch_data("SELECT * FROM relationships")
     return jsonify(relationships), 200
 
+@app.route("/api/relationships/<int:relationship_id>", methods=["GET"])
+@jwt_required()
+def search_relationships(relationship_id):
+    relationships = fetch_data("SELECT * FROM relationships WHERE idrelationships= %s", (relationship_id,))
+    return jsonify(relationships), 200
 
 @app.route("/api/relationships", methods=["POST"])
 @role_required("admin")

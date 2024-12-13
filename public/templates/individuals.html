@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Individuals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body class="bg-fuchsia-100 p-6">
+    <h1 class="text-3xl font-bold mb-6 text-pink-600">Individuals Management</h1>
+
+    <div>
+        <div class="flex justify-between">
+            <button id="add-individual-btn"
+                class="bg-pink-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded mb-4">Add
+                Individual</button>
+
+            <button id="endpoint-btn"
+                class="bg-pink-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded mb-4">View
+                Endpoints</button>
+
+            <button id="logout-btn"
+                class="bg-pink-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded mb-4">Logout</button>
+        </div>
+
+        <table class="min-w-full bg-fuchsia-100/70 rounded bg-white border">
+            <thead>
+                <tr>
+                    <th class="border px-4 py-2 text-pink-700">ID</th>
+                    <th class="border px-4 py-2 text-pink-700">Name</th>
+                    <th class="border px-4 py-2 text-pink-700">Birthdate</th>
+                    <th class="border px-4 py-2 text-pink-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="individuals-table">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="modal" class="fixed z-10 inset-0 bg-pink-700/30 backdrop-blur-sm hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-6 rounded shadow-lg w-1/3">
+                <h2 id="modal-title" class="text-xl font-bold mb-4 text-pink-700">Add Individual</h2>
+                <form id="individual-form">
+                    <input type="hidden" id="individual-id" />
+                    <div class="mb-4">
+                        <label for="fname" class="block text-pink-700">First Name</label>
+                        <input type="text" id="fname" class="w-full border px-3 py-2 rounded" required />
+                    </div>
+                    <div class="mb-4">
+                        <label for="lname" class="block text-pink-700">Last Name</label>
+                        <input type="text" id="lname" class="w-full border px-3 py-2 rounded" required />
+                    </div>
+                    <div class="mb-4">
+                        <label for="birthdate" class="block text-pink-700">Birthdate</label>
+                        <input type="date" id="birthdate" class="w-full border px-3 py-2 rounded" required />
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="button" id="cancel-btn"
+                            class="bg-gray-300 hover:bg-gray-400  px-4 py-2 rounded mr-2">Cancel</button>
+                        <button type="submit"
+                            class="bg-pink-700 font-semibold hover:bg-rose-600 text-white px-4 py-2 rounded">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="endpoint-modal" class="fixed z-10 inset-0 bg-pink-700/30 backdrop-blur-sm hidden">
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="bg-white p-6 rounded shadow-lg w-1/3">
+                <h2 class="text-xl font-bold mb-4 text-pink-700">API Endpoints</h2>
+                <ul class="space-y-2">
+                    <li>Note: This uses JWT encryption</li>
+                    <li><a href="#" class="endpoint-link text-rose-600 underline"
+                            data-url="/api/role_types">/api/role_types</a></li>
+                    <li><a href="#" class="endpoint-link text-rose-600 underline"
+                            data-url="/api/relationship_types">/api/relationship_types</a></li>
+                    <li><a href="#" class="endpoint-link text-rose-600 underline"
+                            data-url="/api/donations">/api/donations</a></li>
+                    <li><a href="#" class="endpoint-link text-rose-600 underline"
+                            data-url="/api/individuals">/api/individuals</a></li>
+                    <li><a href="#" class="endpoint-link text-rose-600 underline"
+                            data-url="/api/relationships">/api/relationships</a></li>
+                </ul>
+                <div class="flex justify-end mt-4">
+                    <button id="close-endpoint-modal"
+                        class="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                alert('You are not authorized. Redirecting to Sign In.');
+                window.location.href = '/';
+            }
+
+            $('#endpoint-btn').click(function () {
+                $('#endpoint-modal').removeClass('hidden');
+            });
+
+            $('#close-endpoint-modal').click(function () {
+                $('#endpoint-modal').addClass('hidden');
+            });
+
+            $(document).on('click', '.endpoint-link', function (e) {
+                e.preventDefault();
+                const url = $(this).data('url');
+
+                $.ajax({
+                    url: url,
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                    success: function (response) {
+                        const dataWindow = window.open('', '_blank');
+                        dataWindow.document.write('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
+                    },
+                    error: function () {
+                        alert('Failed to fetch data. Make sure your token is valid.');
+                    }
+                });
+            });
+
+
+
+            function fetchIndividuals() {
+                $.ajax({
+                    url: '/api/individuals',
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                    success: function (response) {
+                        $('#individuals-table').empty();
+                        response.forEach(ind => {
+                            $('#individuals-table').append(`
+                                <tr>
+                                    <td class="border px-4 py-2">${ind.idindividuals}</td>
+                                    <td class="border px-4 py-2">${ind.fname} ${ind.lname}</td>
+                                    <td class="border px-4 py-2">${ind.birthdate}</td>
+                                    <td class="border px-4 py-2">
+                                        <button class="edit-btn bg-fuchsia-400 text-white px-2 py-1 rounded" data-id="${ind.idindividuals}">Edit</button>
+                                        <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded" data-id="${ind.idindividuals}">Delete</button>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    },
+                    error: function () {
+                        alert('Failed to fetch individuals.');
+                    }
+                });
+            }
+
+            fetchIndividuals();
+
+            function showModal(title, individual = {}) {
+                $('#modal-title').text(title);
+                $('#individual-id').val(individual.idindividuals || '');
+                $('#fname').val(individual.fname || '');
+                $('#lname').val(individual.lname || '');
+
+                if (individual.birthdate) {
+                    const date = new Date(individual.birthdate);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    $('#birthdate').val(formattedDate);
+                } else {
+                    $('#birthdate').val('');
+                }
+
+                $('#modal').removeClass('hidden');
+            }
+
+
+            function hideModal() {
+                $('#modal').addClass('hidden');
+                $('#individual-form')[0].reset();
+            }
+
+            $('#add-individual-btn').click(function () {
+                showModal('Add Individual');
+            });
+
+            $(document).on('click', '.edit-btn', function () {
+                const id = $(this).data('id');
+                $.ajax({
+                    url: `/api/individuals/${id}`,
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                    success: function (individual) {
+                        showModal('Edit Individual', individual[0]);
+                    },
+                    error: function () {
+                        alert('Failed to fetch individual data.');
+                    }
+                });
+            });
+
+            $('#individual-form').submit(function (e) {
+                e.preventDefault();
+                const id = $('#individual-id').val();
+                const payload = {
+                    type_id: $('#type-id').val() || 1,
+                    is_male: $('#is-male').val() || 1,
+                    fname: $('#fname').val(),
+                    mname: $('#mname').val() || '',
+                    lname: $('#lname').val(),
+                    address: $('#address').val() || '',
+                    contact: $('#contact').val() || '',
+                    birthdate: $('#birthdate').val()
+                };
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `/api/individuals/${id}` : '/api/individuals';
+
+                console.log(JSON.stringify(payload));
+                $.ajax({
+                    url: url,
+                    method: method,
+                    headers: { Authorization: `Bearer ${token}` },
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function () {
+                        hideModal();
+                        fetchIndividuals();
+                    },
+                    error: function () {
+                        alert('Failed to save individual.');
+                    }
+                });
+            });
+
+            $(document).on('click', '.delete-btn', function () {
+                const id = $(this).data('id');
+                const isConfirmed = confirm("Are you sure you want to delete this?");
+                if (!isConfirmed) {
+                    return;
+                }
+                $.ajax({
+                    url: `/api/individuals/${id}`,
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                    success: function () {
+                        fetchIndividuals();
+                    },
+                    error: function () {
+                        alert('Failed to delete individual.');
+                    }
+                });
+            });
+
+            $('#cancel-btn').click(function () {
+                hideModal();
+            });
+
+            $('#logout-btn').click(function () {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+
+</html>
