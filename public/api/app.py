@@ -138,7 +138,7 @@ def update_role_type(role_type_id):
     execute_query(
         """
         UPDATE role_types SET description = %s WHERE idrole_types = %s
-    """,
+        """,
         (data["description"], role_type_id),
     )
     return jsonify({"message": "Role_type updated successfully."}), 200
@@ -180,7 +180,7 @@ def update_relationship_type(relationship_type_id):
     execute_query(
         """
         UPDATE relationship_types SET description = %s WHERE idrelationship_types = %s
-    """,
+        """,
         (data["description"], relationship_type_id),
     )
     return jsonify({"message": "Relationship_type updated successfully."}), 200
@@ -193,6 +193,46 @@ def delete_relationship_type(relationship_type_id):
     return jsonify({"message": "Relationship_type deleted successfully."}), 200
 
 
+
+# DONATIONS
+@app.route("/api/donations", methods=["GET"])
+@jwt_required()
+def get_donations():
+    donations = fetch_data("SELECT * FROM donations")
+    return jsonify(donations), 200
+
+
+@app.route("/api/donations", methods=["POST"])
+@role_required("admin")
+def add_donation():
+    data = request.json
+    execute_query(
+        """
+        INSERT INTO donations (individual_id, date, ampoule_count, motilitiy_rating) VALUES (%s, %s, %s, %s)
+        """,
+        (data["individual_id"], data["date"], data["ampoule_count"], data["motilitiy_rating"]),
+    )
+    return jsonify({"message": "Donation added successfully."}), 201
+
+
+@app.route("/api/donations/<int:donation_id>", methods=["PUT"])
+@role_required("admin")
+def update_donation(donation_id):
+    data = request.json
+    execute_query(
+        """
+        UPDATE donations SET individual_id = %s, date = %s, ampoule_count = %s, motilitiy_rating = %s WHERE iddonations = %s
+        """,
+        (data["individual_id"], data["date"], data["ampoule_count"], data["motilitiy_rating"], donation_id),
+    )
+    return jsonify({"message": "Donation updated successfully."}), 200
+
+
+@app.route("/api/donations/<int:donation_id>", methods=["DELETE"])
+@role_required("admin")
+def delete_donation(donation_id):
+    execute_query("DELETE FROM donations WHERE iddonations = %s", (donation_id,))
+    return jsonify({"message": "Donation deleted successfully."}), 200
 
 
 
