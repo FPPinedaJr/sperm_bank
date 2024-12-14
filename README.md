@@ -66,6 +66,11 @@ A Flask-based RESTful API for managing a sperm bank's data, including role types
    ```
    The application will be accessible at `http://localhost:5000`.
 
+6. Test `app.py`:
+   ```bash
+   pytest public/test_app.py
+   ```
+
 ## API Documentation
 
 ### Authentication Endpoints
