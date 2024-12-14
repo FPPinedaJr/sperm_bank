@@ -137,6 +137,13 @@ def search_role_types(role_type_id):
 @role_required("admin")
 def add_role_type():
     data = request.json
+    
+    required_fields = ["description"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         INSERT INTO role_types (description) VALUES (%s)
@@ -150,6 +157,13 @@ def add_role_type():
 @role_required("admin")
 def update_role_type(role_type_id):
     data = request.json
+    
+    required_fields = ["description"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         UPDATE role_types SET description = %s WHERE idrole_types = %s
@@ -162,10 +176,16 @@ def update_role_type(role_type_id):
 @app.route("/api/role_types/<int:role_type_id>", methods=["DELETE"])
 @role_required("admin")
 def delete_role_type(role_type_id):
-    execute_query("DELETE FROM role_types WHERE idrole_types = %s", (role_type_id,))
-    return jsonify({"message": "Role_type deleted successfully."}), 200
-
-
+    try:
+        rows_affected = execute_query(
+            "DELETE FROM role_types WHERE idrole_types = %s", (role_type_id,)
+        )
+        if rows_affected == 0:
+            return jsonify({"message": "Role_type not found."}), 404
+        return jsonify({"message": "Role_type deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+        
 
 # RELATIONSHIP_TYPES
 @app.route("/api/relationship_types", methods=["GET"])
@@ -186,6 +206,13 @@ def search_relationship_types(relationship_id):
 @role_required("admin")
 def add_relationship_type():
     data = request.json
+    
+    required_fields = ["description"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         INSERT INTO relationship_types (description) VALUES (%s)
@@ -199,6 +226,13 @@ def add_relationship_type():
 @role_required("admin")
 def update_relationship_type(relationship_type_id):
     data = request.json
+    
+    required_fields = ["description"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         UPDATE relationship_types SET description = %s WHERE idrelationship_types = %s
@@ -211,8 +245,15 @@ def update_relationship_type(relationship_type_id):
 @app.route("/api/relationship_types/<int:relationship_type_id>", methods=["DELETE"])
 @role_required("admin")
 def delete_relationship_type(relationship_type_id):
-    execute_query("DELETE FROM relationship_types WHERE idrelationship_types = %s", (relationship_type_id,))
-    return jsonify({"message": "Relationship_type deleted successfully."}), 200
+    try:
+        rows_affected = execute_query(
+            "DELETE FROM relationship_types WHERE idrelationship_types = %s", (relationship_type_id,)
+        )
+        if rows_affected == 0:
+            return jsonify({"message": "Relationship_type not found."}), 404
+        return jsonify({"message": "Relationship_type deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 
 
@@ -235,6 +276,14 @@ def search_donations(donation_id):
 @role_required("admin")
 def add_donation():
     data = request.json
+    
+    required_fields = ["individual_id", "date", "ampoule_count", "motilitiy_rating"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
+    
     execute_query(
         """
         INSERT INTO donations (individual_id, date, ampoule_count, motilitiy_rating) VALUES (%s, %s, %s, %s)
@@ -248,6 +297,13 @@ def add_donation():
 @role_required("admin")
 def update_donation(donation_id):
     data = request.json
+    
+    required_fields = ["individual_id", "date", "ampoule_count", "motilitiy_rating"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         UPDATE donations SET individual_id = %s, date = %s, ampoule_count = %s, motilitiy_rating = %s WHERE iddonations = %s
@@ -260,8 +316,16 @@ def update_donation(donation_id):
 @app.route("/api/donations/<int:donation_id>", methods=["DELETE"])
 @role_required("admin")
 def delete_donation(donation_id):
-    execute_query("DELETE FROM donations WHERE iddonations = %s", (donation_id,))
-    return jsonify({"message": "Donation deleted successfully."}), 200
+    try:
+        rows_affected = execute_query(
+            "DELETE FROM donations WHERE iddonations = %s", (donation_id,)
+        )
+        if rows_affected == 0:
+            return jsonify({"message": "Donation not found."}), 404
+        return jsonify({"message": "Donation deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
 
 
 
@@ -284,7 +348,13 @@ def search_individuals(individual_id):
 @role_required("admin")
 def add_individual():
     data = request.json
-    print(data)
+    
+    required_fields = ["type_id", "birthdate", "is_male", "fname", "mname", "lname", "address", "contact"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         INSERT INTO individuals (type_id, birthdate, is_male, fname, mname, lname, address, contact) 
@@ -300,6 +370,13 @@ def add_individual():
 @role_required("admin")
 def update_individual(individual_id):
     data = request.json
+        
+    required_fields = ["type_id", "birthdate", "is_male", "fname", "mname", "lname", "address", "contact"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         UPDATE individuals SET 
@@ -315,8 +392,15 @@ def update_individual(individual_id):
 @app.route("/api/individuals/<int:individual_id>", methods=["DELETE"])
 @role_required("admin")
 def delete_individual(individual_id):
-    execute_query("DELETE FROM individuals WHERE idindividuals = %s", (individual_id,))
-    return jsonify({"message": "Individual deleted successfully."}), 200
+    try:
+        rows_affected = execute_query(
+            "DELETE FROM individuals WHERE idindividuals = %s", (individual_id,)
+        )
+        if rows_affected == 0:
+            return jsonify({"message": "Individual not found."}), 404
+        return jsonify({"message": "Individual deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 
 
@@ -337,6 +421,13 @@ def search_relationships(relationship_id):
 @role_required("admin")
 def add_relationship():
     data = request.json
+    
+    required_fields = ["type_id", "individual_1_id", "individual_2_id", "date_start", "date_end"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         INSERT INTO relationships (type_id, individual_1_id, individual_2_id, date_start, date_end) VALUES (%s, %s, %s, %s, %s)
@@ -350,6 +441,13 @@ def add_relationship():
 @role_required("admin")
 def update_relationship(relationship_id):
     data = request.json
+        
+    required_fields = ["type_id", "individual_1_id", "individual_2_id", "date_start", "date_end"]
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+    
     execute_query(
         """
         UPDATE relationships SET 
@@ -363,8 +461,15 @@ def update_relationship(relationship_id):
 @app.route("/api/relationships/<int:relationship_id>", methods=["DELETE"])
 @role_required("admin")
 def delete_relationship(relationship_id):
-    execute_query("DELETE FROM relationships WHERE idrelationships = %s", (relationship_id,))
-    return jsonify({"message": "Relationship deleted successfully."}), 200
+    try:
+        rows_affected = execute_query(
+            "DELETE FROM relationships WHERE idrelationships = %s", (relationship_id,)
+        )
+        if rows_affected == 0:
+            return jsonify({"message": "Relationship not found."}), 404
+        return jsonify({"message": "Relationship deleted successfully."}), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 
 
